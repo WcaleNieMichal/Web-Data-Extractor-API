@@ -1,0 +1,22 @@
+# Production
+services:
+  scraper:
+    build: .
+    container_name: scraper-prod
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - ENV=prod
+    env_file:
+      - .env.prod
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

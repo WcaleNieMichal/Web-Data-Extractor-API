@@ -1,0 +1,11 @@
+# Test
+services:
+  scraper-test:
+    build: .
+    container_name: scraper-test
+    environment:
+      - ENV=test
+    env_file:
+      - .env.test
+    command: pytest -v
+    restart: "no"

@@ -1,0 +1,15 @@
+# Development (domyślny)
+services:
+  scraper:
+    build: .
+    container_name: scraper-dev
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./zadania:/app/zadania
+    environment:
+      - ENV=dev
+    env_file:
+      - .env.dev
+    restart: "no"
