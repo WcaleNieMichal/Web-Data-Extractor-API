@@ -21,13 +21,17 @@ class BooksScraper:
     Attributes:
         category: Slug kategorii (np. "travel_2"). Domyślnie "books_1".
         pages: Liczba stron do pobrania.
+        output_format: Format wyjścia - "json", "csv" lub "excel".
 
     Example:
         >>> scraper = BooksScraper(category="mystery_3", pages=2)
-        >>> books = scraper.get(output_format="dict")
+        >>> json_str = scraper.get()  # domyślnie JSON
 
-        >>> scraper = BooksScraper()  # Strona główna
-        >>> books = scraper.get(output_format="json")
+        >>> scraper = BooksScraper(output_format="csv")
+        >>> csv_str = scraper.get()
+
+        >>> scraper = BooksScraper(output_format="excel")
+        >>> excel_bytes = scraper.get()  # bytes do zapisu
     """
 
     BASE_URL = "https://books.toscrape.com/catalogue/category/{category}/page-{page}.html"
@@ -40,16 +44,24 @@ class BooksScraper:
         "Five": 5,
     }
 
-    def __init__(self, category: str | None = None, pages: int | None = None):
+    def __init__(
+        self,
+        category: str | None = None,
+        pages: int | None = None,
+        output_format: Literal["json", "csv", "excel"] = "json",
+    ):
         """Inicjalizuje scraper.
 
         Args:
             category: Slug kategorii (np. "travel_2", "mystery_3").
                       None = strona główna (books_1).
             pages: Liczba stron do pobrania. None = wszystkie strony.
+            output_format: Format wyjścia - "json", "csv" lub "excel".
+                          Domyślnie "json".
         """
         self.category = category if category else "books_1"
         self.pages = pages  # None = auto (wszystkie strony)
+        self.output_format = output_format
 
     def build_url(self, page: int = 1) -> str:
         """Buduje URL dla danej strony kategorii.
@@ -208,23 +220,37 @@ class BooksScraper:
 
         return output.getvalue()
 
-    def get(
-        self,
-        html: str | None = None,
-        output_format: Literal["dict", "json", "csv"] = "dict",
-    ) -> list[dict] | str:
-        """Pobiera książki i zwraca w wybranym formacie.
+    def _to_excel(self, books: list[dict]) -> bytes:
+        """Konwertuje listę książek do formatu Excel (bytes).
+
+        Args:
+            books: Lista słowników z danymi książek.
+
+        Returns:
+            Plik XLSX jako bytes.
+        """
+        import pandas as pd
+
+        df = pd.DataFrame(books)
+        output = io.BytesIO()
+        df.to_excel(output, index=False)
+        return output.getvalue()
+
+    def get(self, html: str | None = None) -> str | bytes:
+        """Pobiera książki i zwraca w formacie ustawionym w konstruktorze.
 
         Args:
             html: Opcjonalny HTML do sparsowania (zamiast pobierania).
-            output_format: Format wyjściowy - "dict", "json" lub "csv".
 
         Returns:
-            Lista słowników, string JSON lub string CSV.
+            JSON string, CSV string lub Excel bytes.
 
         Example:
             >>> scraper = BooksScraper(category="travel_2", pages=3)
-            >>> books = scraper.get(output_format="json")
+            >>> json_str = scraper.get()
+
+            >>> scraper = BooksScraper(output_format="excel")
+            >>> excel_bytes = scraper.get()
         """
         all_books = []
 
@@ -258,9 +284,9 @@ class BooksScraper:
 
         logger.info(f"Total books: {len(all_books)}")
 
-        if output_format == "json":
-            return json.dumps(all_books, ensure_ascii=False, indent=2)
-        elif output_format == "csv":
+        if self.output_format == "csv":
             return self._to_csv(all_books)
+        elif self.output_format == "excel":
+            return self._to_excel(all_books)
 
-        return all_books
+        return json.dumps(all_books, ensure_ascii=False, indent=2)

@@ -1,16 +1,14 @@
 """CLI dla BooksScraper.
 
 Przykłady użycia:
-    python main.py                    # Strona główna
+    python main.py                    # Strona główna, JSON
     python main.py mystery_3          # Kategoria Mystery
     python main.py travel_2 --pages 3 # Travel, 3 strony
-    python main.py --format json      # Wyjście jako JSON
+    python main.py --format csv       # Wyjście jako CSV
 """
 
 import argparse
-import csv
-import io
-import json
+from pathlib import Path
 from typing import Literal
 
 from src.scrapers.books_scraper import BooksScraper
@@ -36,6 +34,7 @@ Przykłady:
   python main.py travel_2 --pages 3 # Travel, 3 strony
   python main.py --format json      # Wyjście jako JSON
   python main.py --format csv       # Wyjście jako CSV
+  python main.py --format excel     # Wyjście jako Excel
 
 Dostępne kategorie:
   books_1 (wszystkie), travel_2, mystery_3, science-fiction_16,
@@ -67,62 +66,12 @@ Dostępne kategorie:
     return parser.parse_args(args)
 
 
-def format_output(
-    books: list[dict],
-    output_format: Literal["json", "csv", "excel"],
-) -> str:
-    """Zapisuje listę książek do pliku w wybranym formacie.
-
-    Args:
-        books: Lista słowników z danymi książek.
-        output_format: Format wyjścia - "json", "csv" lub "excel".
-
-    Returns:
-        Komunikat o zapisaniu pliku ze ścieżką.
-    """
-    from pathlib import Path
-
-    output_dir = Path("data/processed")
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    if output_format == "json":
-        filepath = output_dir / "books.json"
-        content = json.dumps(books, ensure_ascii=False, indent=2)
-        filepath.write_text(content, encoding="utf-8")
-        return f"Zapisano {len(books)} książek do: {filepath}"
-
-    if output_format == "csv":
-        filepath = output_dir / "books.csv"
-        if not books:
-            filepath.write_text("", encoding="utf-8")
-            return f"Zapisano 0 książek do: {filepath}"
-        output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=books[0].keys())
-        writer.writeheader()
-        writer.writerows(books)
-        filepath.write_text(output.getvalue(), encoding="utf-8")
-        return f"Zapisano {len(books)} książek do: {filepath}"
-
-    if output_format == "excel":
-        import pandas as pd
-
-        filepath = output_dir / "books.xlsx"
-        df = pd.DataFrame(books)
-        df.to_excel(filepath, index=False)
-        return f"Zapisano {len(books)} książek do: {filepath}"
-
-    filepath = output_dir / "books.json"
-    content = json.dumps(books, ensure_ascii=False, indent=2)
-    filepath.write_text(content, encoding="utf-8")
-    return f"Zapisano {len(books)} książek do: {filepath}"
-
-
 def run_cli(
     category: str | None,
     pages: int | None,
     output_format: Literal["json", "csv", "excel"],
 ) -> str:
-    """Uruchamia scraper i zwraca sformatowane wyjście.
+    """Uruchamia scraper i zapisuje wynik do pliku.
 
     Args:
         category: Slug kategorii lub None dla strony głównej.
@@ -130,12 +79,39 @@ def run_cli(
         output_format: Format wyjścia.
 
     Returns:
-        Sformatowany string z wynikami.
+        Komunikat o zapisaniu pliku.
     """
-    scraper = BooksScraper(category=category, pages=pages)
-    books = scraper.get(output_format="dict")
+    scraper = BooksScraper(
+        category=category,
+        pages=pages,
+        output_format=output_format,
+    )
 
-    return format_output(books, output_format)
+    data = scraper.get()
+
+    # Zapisz do pliku
+    output_dir = Path("data/processed")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    ext_map = {"json": "json", "csv": "csv", "excel": "xlsx"}
+    ext = ext_map[output_format]
+    filepath = output_dir / f"books.{ext}"
+
+    if output_format == "excel":
+        filepath.write_bytes(data)
+    else:
+        filepath.write_text(data, encoding="utf-8")
+
+    # Policz książki (parsuj JSON dla liczby)
+    if output_format == "json":
+        import json
+        count = len(json.loads(data))
+    elif output_format == "csv":
+        count = len(data.strip().split("\n")) - 1 if data.strip() else 0
+    else:
+        count = "?"
+
+    return f"Zapisano {count} książek do: {filepath}"
 
 
 def main():
