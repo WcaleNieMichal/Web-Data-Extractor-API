@@ -49,10 +49,10 @@ python main.py --format csv         # Wyjście jako CSV
 python main.py --format excel       # Zapisz do data/processed/books.xlsx
 ```
 
-**Formaty wyjścia:**
-- `json` (domyślny) - wypisuje JSON na stdout
-- `csv` - wypisuje CSV na stdout
-- `excel` - zapisuje do pliku `data/processed/books.xlsx`
+**Formaty wyjścia (wszystkie zapisują do plików):**
+- `json` (domyślny) - zapisuje do `data/processed/books.json`
+- `csv` - zapisuje do `data/processed/books.csv`
+- `excel` - zapisuje do `data/processed/books.xlsx`
 
 **Dostępne kategorie:** `books_1` (wszystkie), `travel_2`, `mystery_3`, `science-fiction_16`, `fantasy_19`, `horror_31`, ...
 

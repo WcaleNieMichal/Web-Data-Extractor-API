@@ -71,39 +71,50 @@ def format_output(
     books: list[dict],
     output_format: Literal["json", "csv", "excel"],
 ) -> str:
-    """Formatuje listę książek do wybranego formatu.
+    """Zapisuje listę książek do pliku w wybranym formacie.
 
     Args:
         books: Lista słowników z danymi książek.
         output_format: Format wyjścia - "json", "csv" lub "excel".
 
     Returns:
-        Sformatowany string (json/csv) lub ścieżka do pliku (excel).
+        Komunikat o zapisaniu pliku ze ścieżką.
     """
-    if not books:
-        return "[]" if output_format == "json" else ""
+    from pathlib import Path
+
+    output_dir = Path("data/processed")
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     if output_format == "json":
-        return json.dumps(books, ensure_ascii=False, indent=2)
+        filepath = output_dir / "books.json"
+        content = json.dumps(books, ensure_ascii=False, indent=2)
+        filepath.write_text(content, encoding="utf-8")
+        return f"Zapisano {len(books)} książek do: {filepath}"
 
     if output_format == "csv":
+        filepath = output_dir / "books.csv"
+        if not books:
+            filepath.write_text("", encoding="utf-8")
+            return f"Zapisano 0 książek do: {filepath}"
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=books[0].keys())
         writer.writeheader()
         writer.writerows(books)
-        return output.getvalue()
+        filepath.write_text(output.getvalue(), encoding="utf-8")
+        return f"Zapisano {len(books)} książek do: {filepath}"
 
     if output_format == "excel":
         import pandas as pd
-        from pathlib import Path
 
+        filepath = output_dir / "books.xlsx"
         df = pd.DataFrame(books)
-        filepath = Path("data/processed/books.xlsx")
-        filepath.parent.mkdir(parents=True, exist_ok=True)
         df.to_excel(filepath, index=False)
         return f"Zapisano {len(books)} książek do: {filepath}"
 
-    return json.dumps(books, ensure_ascii=False, indent=2)
+    filepath = output_dir / "books.json"
+    content = json.dumps(books, ensure_ascii=False, indent=2)
+    filepath.write_text(content, encoding="utf-8")
+    return f"Zapisano {len(books)} książek do: {filepath}"
 
 
 def run_cli(
