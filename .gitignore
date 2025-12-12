@@ -5,6 +5,11 @@
 venv/
 env/
 
+# Project specific
+CLAUDE.md
+zadania/
+tests/
+
 # Python
 __pycache__/
 *.py[cod]
