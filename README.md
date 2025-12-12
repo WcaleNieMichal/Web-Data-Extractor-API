@@ -1,6 +1,12 @@
-# Web Scraping Project
+# Web Scrapers API
 
-Projekt do web scrapingu z modularną architekturą.
+REST API do pobierania danych z różnych stron internetowych. Projekt zgodny z konwencjami REST API.
+
+## Dostępne scrapery
+
+- **Books** - książki z [books.toscrape.com](https://books.toscrape.com)
+- **Quotes** - cytaty z [quotes.toscrape.com](https://quotes.toscrape.com)
+- **Oscars** - filmy oscarowe z [scrapethissite.com](https://www.scrapethissite.com/pages/ajax-javascript/)
 
 ## Struktura projektu
 
@@ -11,6 +17,10 @@ Projekt do web scrapingu z modularną architekturą.
 │   └── processed/      # Przetworzone dane
 ├── logs/               # Logi aplikacji
 ├── src/
+│   ├── api/            # FastAPI REST API
+│   │   ├── main.py     # Główna aplikacja
+│   │   ├── routers/    # Endpointy (books, quotes, oscars)
+│   │   └── schemas/    # Pydantic schemas
 │   ├── models/         # Modele danych (Pydantic)
 │   ├── pipelines/      # Pipeline'y przetwarzania
 │   ├── scrapers/       # Scrapery
@@ -29,32 +39,120 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-## Docker
+## Uruchomienie
+
+### Development (lokalne)
+
+```bash
+uvicorn src.api.main:app --reload
+```
+
+### Docker Development
 
 ```bash
 docker compose up --build
 ```
 
-## Użycie CLI
+### Docker Production
 
 ```bash
-# Uruchom CLI
-python main.py
-
-# Przykłady
-python main.py                      # Wszystkie książki, wszystkie strony, JSON
-python main.py mystery_3            # Kategoria Mystery
-python main.py travel_2 --pages 3   # Travel, tylko 3 strony
-python main.py --format csv         # Wyjście jako CSV
-python main.py --format excel       # Zapisz do data/processed/books.xlsx
+docker compose -f docker-compose.prod.yml up --build -d
 ```
 
-**Formaty wyjścia (wszystkie zapisują do plików):**
-- `json` (domyślny) - zapisuje do `data/processed/books.json`
-- `csv` - zapisuje do `data/processed/books.csv`
-- `excel` - zapisuje do `data/processed/books.xlsx`
+## Swagger UI (Demo dla klientów)
 
-**Dostępne kategorie:** `books_1` (wszystkie), `travel_2`, `mystery_3`, `science-fiction_16`, `fantasy_19`, `horror_31`, ...
+Po uruchomieniu API, otwórz w przeglądarce:
+
+- **Swagger UI:** http://localhost:8000/docs
+- **ReDoc:** http://localhost:8000/redoc
+
+Swagger UI posiada wbudowaną funkcję **"Try it out"** - kliknij przycisk, wypełnij parametry i przetestuj API bezpośrednio w przeglądarce.
+
+## Endpointy API
+
+### Books `/api/books`
+
+```bash
+# Wszystkie książki (JSON)
+curl http://localhost:8000/api/books
+
+# Książki z kategorii mystery (2 strony)
+curl "http://localhost:8000/api/books?category=mystery&pages=2"
+
+# Pobranie CSV
+curl -o books.csv "http://localhost:8000/api/books?format=csv&pages=1"
+
+# Pobranie Excel
+curl -o books.xlsx "http://localhost:8000/api/books?format=excel&pages=1"
+```
+
+**Parametry:**
+- `category` - kategoria (np. mystery, horror, travel)
+- `pages` - liczba stron (1-50, puste = wszystkie)
+- `format` - json (domyślny), csv, excel
+
+### Quotes `/api/quotes`
+
+```bash
+# Wszystkie cytaty (JSON)
+curl http://localhost:8000/api/quotes
+
+# Cytaty z tagiem love (2 strony)
+curl "http://localhost:8000/api/quotes?tag=love&pages=2"
+
+# Pobranie CSV
+curl -o quotes.csv "http://localhost:8000/api/quotes?format=csv"
+```
+
+**Parametry:**
+- `tag` - tag do filtrowania (np. love, life, inspirational)
+- `pages` - liczba stron (1-50, puste = wszystkie)
+- `format` - json (domyślny), csv, excel
+
+### Oscars `/api/oscars`
+
+```bash
+# Wszystkie filmy oscarowe (JSON)
+curl http://localhost:8000/api/oscars
+
+# Filmy z 2015 roku
+curl "http://localhost:8000/api/oscars?year=2015"
+
+# Pobranie Excel
+curl -o oscars.xlsx "http://localhost:8000/api/oscars?format=excel"
+```
+
+**Parametry:**
+- `year` - rok ceremonii (2010-2015)
+- `format` - json (domyślny), csv, excel
+
+### Health Check `/health`
+
+```bash
+curl http://localhost:8000/health
+# {"status": "healthy", "version": "1.0.0"}
+```
+
+## Formaty danych
+
+| Format | Content-Type | Opis |
+|--------|--------------|------|
+| JSON | `application/json` | Domyślny format, dane w JSON |
+| CSV | `text/csv` | Plik CSV do pobrania |
+| Excel | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` | Plik XLSX do pobrania |
+
+## REST API Standards
+
+API jest zgodne z konwencjami REST:
+
+- **Nazewnictwo zasobów** - rzeczowniki w liczbie mnogiej (`/books`, `/quotes`, `/oscars`)
+- **Metody HTTP** - GET dla pobierania danych
+- **Kody odpowiedzi:**
+  - `200 OK` - sukces
+  - `400 Bad Request` - błędne parametry
+  - `422 Unprocessable Entity` - błąd walidacji
+  - `500 Internal Server Error` - błąd serwera
+- **Filtry** - query params (`?category=mystery&pages=2`)
 
 ---
 
@@ -302,9 +400,9 @@ git commit -m "refactor: wydziel metodę _parse_price"
 | `pytest` | Uruchom testy |
 | `pytest -v` | Testy z detalami |
 | `pytest --cov=src --cov-fail-under=80` | Testy z coverage (min 80%) |
-| `python main.py` | Uruchom CLI |
-| `python main.py mystery_3 --pages 2` | Scrapuj kategorię |
-| `docker compose up` | Uruchom w Docker |
+| `uvicorn src.api.main:app --reload` | Uruchom API (dev) |
+| `docker compose up` | Uruchom w Docker (dev) |
+| `docker compose -f docker-compose.prod.yml up -d` | Uruchom w Docker (prod) |
 
 ## Zmienne środowiskowe
 

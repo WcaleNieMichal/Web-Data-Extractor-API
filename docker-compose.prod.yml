@@ -1,8 +1,10 @@
 # Production
 services:
-  scraper:
+  api:
     build: .
-    container_name: scraper-prod
+    container_name: scrapers-api-prod
+    ports:
+      - "8000:8000"
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -11,10 +13,21 @@ services:
     env_file:
       - .env.prod
     restart: always
+    # Gunicorn z Dockerfile CMD
     deploy:
       resources:
         limits:
+          cpus: "1.0"
           memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     logging:
       driver: json-file
       options:
