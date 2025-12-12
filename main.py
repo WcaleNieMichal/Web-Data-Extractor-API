@@ -1,7 +1,7 @@
 """CLI dla BooksScraper.
 
 Przykłady użycia:
-    python main.py                    # Strona główna, JSON
+    python main.py                    # Tryb interaktywny
     python main.py mystery_3          # Kategoria Mystery
     python main.py travel_2 --pages 3 # Travel, 3 strony
     python main.py --format csv       # Wyjście jako CSV
@@ -114,15 +114,62 @@ def run_cli(
     return f"Zapisano {count} książek do: {filepath}"
 
 
+def interactive_mode() -> tuple[str | None, int | None, str]:
+    """Tryb interaktywny - pyta użytkownika o parametry.
+
+    Returns:
+        Tuple (category, pages, output_format).
+    """
+    print("\n=== BooksScraper - Tryb interaktywny ===\n")
+
+    # Kategoria
+    print("Dostępne kategorie:")
+    print("  [Enter] - wszystkie książki (strona główna)")
+    print("  travel_2, mystery_3, science-fiction_16, fantasy_19, horror_31, ...")
+    category_input = input("\nKategoria (slug): ").strip()
+    category = category_input if category_input else None
+
+    # Liczba stron
+    print("\nLiczba stron do pobrania:")
+    print("  [Enter] - wszystkie strony")
+    pages_input = input("Liczba stron: ").strip()
+    pages = int(pages_input) if pages_input.isdigit() else None
+
+    # Format
+    print("\nFormat wyjścia:")
+    print("  1. json (domyślnie)")
+    print("  2. csv")
+    print("  3. excel")
+    format_input = input("Wybierz [1/2/3]: ").strip()
+    format_map = {"1": "json", "2": "csv", "3": "excel"}
+    output_format = format_map.get(format_input, "json")
+
+    print()
+    return category, pages, output_format
+
+
+def has_cli_args() -> bool:
+    """Sprawdza czy podano argumenty CLI (poza nazwą skryptu)."""
+    import sys
+    return len(sys.argv) > 1
+
+
 def main():
     """Główna funkcja CLI."""
     setup_logger()
 
-    args = parse_args()
+    if has_cli_args():
+        args = parse_args()
+        category = args.category
+        pages = args.pages
+        output_format = args.format
+    else:
+        category, pages, output_format = interactive_mode()
+
     result = run_cli(
-        category=args.category,
-        pages=args.pages,
-        output_format=args.format,
+        category=category,
+        pages=pages,
+        output_format=output_format,
     )
 
     print(result)
