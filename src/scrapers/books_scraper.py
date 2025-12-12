@@ -301,7 +301,7 @@ class BooksScraper:
             return ""
 
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=books[0].keys())
+        writer = csv.DictWriter(output, fieldnames=books[0].keys(), delimiter=";")
         writer.writeheader()
         writer.writerows(books)
 

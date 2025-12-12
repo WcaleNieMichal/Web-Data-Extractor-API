@@ -131,7 +131,7 @@ class OscarsScraper:
             return ""
 
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=films[0].keys())
+        writer = csv.DictWriter(output, fieldnames=films[0].keys(), delimiter=";")
         writer.writeheader()
         writer.writerows(films)
 

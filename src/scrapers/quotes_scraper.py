@@ -174,7 +174,7 @@ class QuotesScraper:
             flat_q["tags"] = ", ".join(q["tags"])
             flat_quotes.append(flat_q)
 
-        writer = csv.DictWriter(output, fieldnames=flat_quotes[0].keys())
+        writer = csv.DictWriter(output, fieldnames=flat_quotes[0].keys(), delimiter=";")
         writer.writeheader()
         writer.writerows(flat_quotes)
 
