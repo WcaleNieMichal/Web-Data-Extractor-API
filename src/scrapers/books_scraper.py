@@ -123,16 +123,29 @@ class BooksScraper:
 
         Returns:
             Slug kategorii (np. "mystery_3").
+
+        Raises:
+            ValueError: Gdy kategoria nie istnieje.
         """
         if not category:
             return "books_1"
 
         key = category.lower().strip()
+
+        # Nazwa kategorii (np. "mystery")
         if key in self.CATEGORIES:
             return self.CATEGORIES[key]
 
-        # Już jest slugiem (np. "mystery_3")
-        return category
+        # Slug kategorii (np. "mystery_3")
+        if key in self.CATEGORIES.values():
+            return key
+
+        # Nieznana kategoria
+        available = ", ".join(sorted(self.CATEGORIES.keys())[:10])
+        raise ValueError(
+            f"Nieznana kategoria: '{category}'. "
+            f"Dostępne: {available}, ..."
+        )
 
     def build_url(self, page: int = 1) -> str:
         """Buduje URL dla danej strony kategorii.
