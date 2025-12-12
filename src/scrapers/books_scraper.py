@@ -34,7 +34,7 @@ class BooksScraper:
         >>> excel_bytes = scraper.get()  # bytes do zapisu
     """
 
-    BASE_URL = "https://books.toscrape.com/catalogue/category/{category}/page-{page}.html"
+    BASE_URL = "https://books.toscrape.com/catalogue/category/books/{category}"
 
     CATEGORIES = {
         "all": "books_1",
@@ -156,7 +156,10 @@ class BooksScraper:
         Returns:
             Pełny URL do strony.
         """
-        return self.BASE_URL.format(category=self.category, page=page)
+        base = self.BASE_URL.format(category=self.category)
+        if page == 1:
+            return f"{base}/index.html"
+        return f"{base}/page-{page}.html"
 
     def fetch(self, page: int = 1) -> str:
         """Pobiera HTML strony.
