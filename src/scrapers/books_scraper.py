@@ -34,7 +34,7 @@ class BooksScraper:
         >>> excel_bytes = scraper.get()  # bytes for saving
     """
 
-    BASE_URL = "https://books.toscrape.com/catalogue/category/books/{category}"
+    BASE_URL = "https://books.toscrape.com/catalogue/category/{category}"
 
     CATEGORIES = {
         "all": "books_1",
