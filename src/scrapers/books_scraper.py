@@ -24,10 +24,10 @@ class BooksScraper:
         output_format: Format wyjścia - "json", "csv" lub "excel".
 
     Example:
-        >>> scraper = BooksScraper(category="mystery_3", pages=2)
+        >>> scraper = BooksScraper(category="mystery", pages=2)
         >>> json_str = scraper.get()  # domyślnie JSON
 
-        >>> scraper = BooksScraper(output_format="csv")
+        >>> scraper = BooksScraper(category="horror", output_format="csv")
         >>> csv_str = scraper.get()
 
         >>> scraper = BooksScraper(output_format="excel")
@@ -35,6 +35,58 @@ class BooksScraper:
     """
 
     BASE_URL = "https://books.toscrape.com/catalogue/category/{category}/page-{page}.html"
+
+    CATEGORIES = {
+        "all": "books_1",
+        "travel": "travel_2",
+        "mystery": "mystery_3",
+        "historical fiction": "historical-fiction_4",
+        "sequential art": "sequential-art_5",
+        "classics": "classics_6",
+        "philosophy": "philosophy_7",
+        "romance": "romance_8",
+        "womens fiction": "womens-fiction_9",
+        "fiction": "fiction_10",
+        "childrens": "childrens_11",
+        "religion": "religion_12",
+        "nonfiction": "nonfiction_13",
+        "music": "music_14",
+        "science fiction": "science-fiction_16",
+        "sports and games": "sports-and-games_17",
+        "fantasy": "fantasy_19",
+        "new adult": "new-adult_20",
+        "young adult": "young-adult_21",
+        "science": "science_22",
+        "poetry": "poetry_23",
+        "paranormal": "paranormal_24",
+        "art": "art_25",
+        "psychology": "psychology_26",
+        "autobiography": "autobiography_27",
+        "parenting": "parenting_28",
+        "adult fiction": "adult-fiction_29",
+        "humor": "humor_30",
+        "horror": "horror_31",
+        "history": "history_32",
+        "food and drink": "food-and-drink_33",
+        "christian fiction": "christian-fiction_34",
+        "business": "business_35",
+        "biography": "biography_36",
+        "thriller": "thriller_37",
+        "contemporary": "contemporary_38",
+        "spirituality": "spirituality_39",
+        "academic": "academic_40",
+        "self help": "self-help_41",
+        "historical": "historical_42",
+        "christian": "christian_43",
+        "suspense": "suspense_44",
+        "short stories": "short-stories_45",
+        "novels": "novels_46",
+        "health": "health_47",
+        "politics": "politics_48",
+        "cultural": "cultural_49",
+        "erotica": "erotica_50",
+        "crime": "crime_51",
+    }
 
     RATING_MAP = {
         "One": 1,
@@ -53,15 +105,34 @@ class BooksScraper:
         """Inicjalizuje scraper.
 
         Args:
-            category: Slug kategorii (np. "travel_2", "mystery_3").
-                      None = strona główna (books_1).
+            category: Nazwa kategorii (np. "mystery", "horror") lub slug.
+                      None = wszystkie książki (books_1).
             pages: Liczba stron do pobrania. None = wszystkie strony.
             output_format: Format wyjścia - "json", "csv" lub "excel".
                           Domyślnie "json".
         """
-        self.category = category if category else "books_1"
+        self.category = self._resolve_category(category)
         self.pages = pages  # None = auto (wszystkie strony)
         self.output_format = output_format
+
+    def _resolve_category(self, category: str | None) -> str:
+        """Zamienia nazwę kategorii na slug.
+
+        Args:
+            category: Nazwa kategorii lub slug.
+
+        Returns:
+            Slug kategorii (np. "mystery_3").
+        """
+        if not category:
+            return "books_1"
+
+        key = category.lower().strip()
+        if key in self.CATEGORIES:
+            return self.CATEGORIES[key]
+
+        # Już jest slugiem (np. "mystery_3")
+        return category
 
     def build_url(self, page: int = 1) -> str:
         """Buduje URL dla danej strony kategorii.

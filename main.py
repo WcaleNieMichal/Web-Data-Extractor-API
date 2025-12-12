@@ -29,16 +29,15 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Przykłady:
-  python main.py                    # Wszystkie książki (strona główna)
-  python main.py mystery_3          # Kategoria Mystery
-  python main.py travel_2 --pages 3 # Travel, 3 strony
-  python main.py --format json      # Wyjście jako JSON
+  python main.py                    # Tryb interaktywny
+  python main.py mystery            # Kategoria Mystery
+  python main.py travel --pages 3   # Travel, 3 strony
   python main.py --format csv       # Wyjście jako CSV
   python main.py --format excel     # Wyjście jako Excel
 
 Dostępne kategorie:
-  books_1 (wszystkie), travel_2, mystery_3, science-fiction_16,
-  fantasy_19, horror_31, i więcej...
+  mystery, horror, thriller, crime, fantasy, romance, fiction,
+  science fiction, history, biography, i więcej...
         """,
     )
 
@@ -46,7 +45,7 @@ Dostępne kategorie:
         "category",
         nargs="?",
         default=None,
-        help="Slug kategorii (np. mystery_3). Domyślnie: wszystkie książki.",
+        help="Nazwa kategorii (np. mystery, horror). Domyślnie: wszystkie.",
     )
 
     parser.add_argument(
@@ -124,9 +123,13 @@ def interactive_mode() -> tuple[str | None, int | None, str]:
 
     # Kategoria
     print("Dostępne kategorie:")
-    print("  [Enter] - wszystkie książki (strona główna)")
-    print("  travel_2, mystery_3, science-fiction_16, fantasy_19, horror_31, ...")
-    category_input = input("\nKategoria (slug): ").strip()
+    print("  [Enter] - wszystkie książki")
+    categories = list(BooksScraper.CATEGORIES.keys())
+    # Wyświetl w kolumnach
+    for i in range(0, len(categories), 4):
+        row = categories[i:i+4]
+        print("  " + ", ".join(row))
+    category_input = input("\nKategoria: ").strip()
     category = category_input if category_input else None
 
     # Liczba stron
