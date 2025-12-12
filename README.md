@@ -1,47 +1,47 @@
 # Web Scrapers API
 
-REST API do pobierania danych z różnych stron internetowych. Projekt zgodny z konwencjami REST API.
+REST API for fetching data from various websites. Project follows REST API conventions.
 
-## Dostępne scrapery
+## Available Scrapers
 
-- **Books** - książki z [books.toscrape.com](https://books.toscrape.com)
-- **Quotes** - cytaty z [quotes.toscrape.com](https://quotes.toscrape.com)
-- **Oscars** - filmy oscarowe z [scrapethissite.com](https://www.scrapethissite.com/pages/ajax-javascript/)
+- **Books** - books from [books.toscrape.com](https://books.toscrape.com)
+- **Quotes** - quotes from [quotes.toscrape.com](https://quotes.toscrape.com)
+- **Oscars** - Oscar-winning films from [scrapethissite.com](https://www.scrapethissite.com/pages/ajax-javascript/)
 
-## Struktura projektu
+## Project Structure
 
 ```
-├── config/             # Konfiguracja aplikacji
+├── config/             # Application configuration
 ├── data/
-│   ├── raw/            # Surowe dane ze scrapingu
-│   └── processed/      # Przetworzone dane
-├── logs/               # Logi aplikacji
+│   ├── raw/            # Raw scraped data
+│   └── processed/      # Processed data
+├── logs/               # Application logs
 ├── src/
 │   ├── api/            # FastAPI REST API
-│   │   ├── main.py     # Główna aplikacja
-│   │   ├── routers/    # Endpointy (books, quotes, oscars)
+│   │   ├── main.py     # Main application
+│   │   ├── routers/    # Endpoints (books, quotes, oscars)
 │   │   └── schemas/    # Pydantic schemas
-│   ├── models/         # Modele danych (Pydantic)
-│   ├── pipelines/      # Pipeline'y przetwarzania
-│   ├── scrapers/       # Scrapery
-│   └── utils/          # Narzędzia pomocnicze
-├── tests/              # Testy jednostkowe
-└── zadania/            # Zadania do realizacji
+│   ├── models/         # Data models (Pydantic)
+│   ├── pipelines/      # Data processing pipelines
+│   ├── scrapers/       # Scrapers
+│   └── utils/          # Utility functions
+├── tests/              # Unit tests
+└── zadania/            # Tasks to implement
 ```
 
-## Instalacja
+## Installation
 
 ```bash
-# Klonowanie i setup
+# Clone and setup
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
 ```
 
-## Uruchomienie
+## Running
 
-### Development (lokalne)
+### Development (local)
 
 ```bash
 uvicorn src.api.main:app --reload
@@ -59,72 +59,72 @@ docker compose up --build
 docker compose -f docker-compose.prod.yml up --build -d
 ```
 
-## Swagger UI (Demo dla klientów)
+## Swagger UI (Client Demo)
 
-Po uruchomieniu API, otwórz w przeglądarce:
+After starting the API, open in browser:
 
 - **Swagger UI:** http://localhost:8000/docs
 - **ReDoc:** http://localhost:8000/redoc
 
-Swagger UI posiada wbudowaną funkcję **"Try it out"** - kliknij przycisk, wypełnij parametry i przetestuj API bezpośrednio w przeglądarce.
+Swagger UI has built-in **"Try it out"** feature - click the button, fill in parameters and test the API directly in browser.
 
-## Endpointy API
+## API Endpoints
 
 ### Books `/api/books`
 
 ```bash
-# Wszystkie książki (JSON)
+# All books (JSON)
 curl http://localhost:8000/api/books
 
-# Książki z kategorii mystery (2 strony)
+# Books from mystery category (2 pages)
 curl "http://localhost:8000/api/books?category=mystery&pages=2"
 
-# Pobranie CSV
+# Download CSV
 curl -o books.csv "http://localhost:8000/api/books?format=csv&pages=1"
 
-# Pobranie Excel
+# Download Excel
 curl -o books.xlsx "http://localhost:8000/api/books?format=excel&pages=1"
 ```
 
-**Parametry:**
-- `category` - kategoria (np. mystery, horror, travel)
-- `pages` - liczba stron (1-50, puste = wszystkie)
-- `format` - json (domyślny), csv, excel
+**Parameters:**
+- `category` - category (e.g. mystery, horror, travel)
+- `pages` - number of pages (1-50, empty = all)
+- `format` - json (default), csv, excel
 
 ### Quotes `/api/quotes`
 
 ```bash
-# Wszystkie cytaty (JSON)
+# All quotes (JSON)
 curl http://localhost:8000/api/quotes
 
-# Cytaty z tagiem love (2 strony)
+# Quotes with tag love (2 pages)
 curl "http://localhost:8000/api/quotes?tag=love&pages=2"
 
-# Pobranie CSV
+# Download CSV
 curl -o quotes.csv "http://localhost:8000/api/quotes?format=csv"
 ```
 
-**Parametry:**
-- `tag` - tag do filtrowania (np. love, life, inspirational)
-- `pages` - liczba stron (1-50, puste = wszystkie)
-- `format` - json (domyślny), csv, excel
+**Parameters:**
+- `tag` - tag to filter (e.g. love, life, inspirational)
+- `pages` - number of pages (1-50, empty = all)
+- `format` - json (default), csv, excel
 
 ### Oscars `/api/oscars`
 
 ```bash
-# Wszystkie filmy oscarowe (JSON)
+# All Oscar-winning films (JSON)
 curl http://localhost:8000/api/oscars
 
-# Filmy z 2015 roku
+# Films from 2015
 curl "http://localhost:8000/api/oscars?year=2015"
 
-# Pobranie Excel
+# Download Excel
 curl -o oscars.xlsx "http://localhost:8000/api/oscars?format=excel"
 ```
 
-**Parametry:**
-- `year` - rok ceremonii (2010-2015)
-- `format` - json (domyślny), csv, excel
+**Parameters:**
+- `year` - ceremony year (2010-2015)
+- `format` - json (default), csv, excel
 
 ### Health Check `/health`
 
@@ -133,78 +133,78 @@ curl http://localhost:8000/health
 # {"status": "healthy", "version": "1.0.0"}
 ```
 
-## Formaty danych
+## Data Formats
 
-| Format | Content-Type | Opis |
-|--------|--------------|------|
-| JSON | `application/json` | Domyślny format, dane w JSON |
-| CSV | `text/csv` | Plik CSV do pobrania |
-| Excel | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` | Plik XLSX do pobrania |
+| Format | Content-Type | Description |
+|--------|--------------|-------------|
+| JSON | `application/json` | Default format, JSON data |
+| CSV | `text/csv` | Downloadable CSV file |
+| Excel | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` | Downloadable XLSX file |
 
 ## REST API Standards
 
-API jest zgodne z konwencjami REST:
+API follows REST conventions:
 
-- **Nazewnictwo zasobów** - rzeczowniki w liczbie mnogiej (`/books`, `/quotes`, `/oscars`)
-- **Metody HTTP** - GET dla pobierania danych
-- **Kody odpowiedzi:**
-  - `200 OK` - sukces
-  - `400 Bad Request` - błędne parametry
-  - `422 Unprocessable Entity` - błąd walidacji
-  - `500 Internal Server Error` - błąd serwera
-- **Filtry** - query params (`?category=mystery&pages=2`)
+- **Resource naming** - plural nouns (`/books`, `/quotes`, `/oscars`)
+- **HTTP methods** - GET for fetching data
+- **Response codes:**
+  - `200 OK` - success
+  - `400 Bad Request` - invalid parameters
+  - `422 Unprocessable Entity` - validation error
+  - `500 Internal Server Error` - server error
+- **Filters** - query params (`?category=mystery&pages=2`)
 
 ---
 
-## Zasady pracy w projekcie
+## Project Guidelines
 
 ### 1. Test-Driven Development (TDD)
 
-Stosujemy cykl **Red-Green-Refactor**:
+We follow the **Red-Green-Refactor** cycle:
 
 ```
-1. RED     → Napisz test, który nie przechodzi
-2. GREEN   → Napisz minimalny kod, aby test przeszedł
-3. REFACTOR → Popraw kod zachowując testy na zielono
+1. RED     → Write a failing test
+2. GREEN   → Write minimal code to pass the test
+3. REFACTOR → Improve code while keeping tests green
 ```
 
 **Workflow:**
 
 ```bash
-# 1. Napisz test w tests/
-# 2. Uruchom test - musi FAILOWAĆ
+# 1. Write test in tests/
+# 2. Run test - must FAIL
 pytest tests/test_my_feature.py -v
 
-# 3. Napisz implementację w src/
-# 4. Uruchom test - musi PRZECHODZIĆ
+# 3. Write implementation in src/
+# 4. Run test - must PASS
 pytest tests/test_my_feature.py -v
 
-# 5. Refaktoruj jeśli potrzeba
-# 6. Uruchom wszystkie testy
+# 5. Refactor if needed
+# 6. Run all tests
 pytest
 ```
 
-### 2. Docstringi w stylu Google
+### 2. Google-style Docstrings
 
-Każda funkcja i klasa musi mieć docstring w formacie Google:
+Every function and class must have a Google-style docstring:
 
 ```python
 def fetch_data(url: str, timeout: int = 30) -> dict:
-    """Pobiera dane z podanego URL.
+    """Fetches data from the given URL.
 
-    Wykonuje request GET i zwraca sparsowane dane JSON.
-    W przypadku błędu połączenia, ponawia próbę 3 razy.
+    Performs a GET request and returns parsed JSON data.
+    Retries 3 times on connection error.
 
     Args:
-        url: Adres URL do pobrania danych.
-        timeout: Maksymalny czas oczekiwania w sekundach.
+        url: URL to fetch data from.
+        timeout: Maximum wait time in seconds.
 
     Returns:
-        Słownik z danymi JSON z odpowiedzi.
+        Dictionary with JSON data from response.
 
     Raises:
-        RequestError: Gdy nie udało się połączyć po 3 próbach.
-        ValueError: Gdy odpowiedź nie jest prawidłowym JSON.
+        RequestError: When connection fails after 3 retries.
+        ValueError: When response is not valid JSON.
 
     Example:
         >>> data = fetch_data("https://api.example.com/users")
@@ -212,18 +212,18 @@ def fetch_data(url: str, timeout: int = 30) -> dict:
     """
 ```
 
-**Szablon dla klas:**
+**Class template:**
 
 ```python
 class ProductScraper(BaseScraper):
-    """Scraper do pobierania danych produktów.
+    """Scraper for fetching product data.
 
-    Obsługuje paginację i ekstrakcję szczegółów produktów
-    z kategorii sklepu.
+    Handles pagination and product detail extraction
+    from store categories.
 
     Attributes:
-        base_url: Bazowy URL sklepu.
-        max_pages: Maksymalna liczba stron do przeskanowania.
+        base_url: Base URL of the store.
+        max_pages: Maximum number of pages to scan.
 
     Example:
         >>> scraper = ProductScraper(max_pages=10)
@@ -231,103 +231,103 @@ class ProductScraper(BaseScraper):
     """
 ```
 
-### 3. Czystość kodu
+### 3. Code Quality
 
-#### Nazewnictwo
+#### Naming Conventions
 
 ```python
-# Zmienne i funkcje: snake_case
+# Variables and functions: snake_case
 user_name = "John"
 def get_user_data():
     pass
 
-# Klasy: PascalCase
+# Classes: PascalCase
 class UserScraper:
     pass
 
-# Stałe: UPPER_SNAKE_CASE
+# Constants: UPPER_SNAKE_CASE
 MAX_RETRIES = 3
 BASE_URL = "https://example.com"
 
-# Prywatne metody: _prefix
+# Private methods: _prefix
 def _parse_response(self):
     pass
 ```
 
-#### Struktura pliku
+#### File Structure
 
 ```python
-"""Moduł do scrapowania produktów."""
+"""Module for product scraping."""
 
-# 1. Importy standardowe
+# 1. Standard library imports
 import json
 from pathlib import Path
 
-# 2. Importy zewnętrzne
+# 2. Third-party imports
 import requests
 from bs4 import BeautifulSoup
 
-# 3. Importy lokalne
+# 3. Local imports
 from config.settings import BASE_URL
 from src.models import Product
 
 
-# 4. Stałe
+# 4. Constants
 DEFAULT_TIMEOUT = 30
 
 
-# 5. Klasy i funkcje
+# 5. Classes and functions
 class Scraper:
     pass
 ```
 
-#### Zasady
+#### Guidelines
 
-- **Maksymalna długość linii:** 88 znaków
-- **Jedna funkcja = jedno zadanie**
-- **Maksymalnie 3 poziomy zagnieżdżenia**
-- **Unikaj magic numbers** - używaj stałych
-- **Type hints** dla argumentów i zwracanych wartości
+- **Maximum line length:** 88 characters
+- **One function = one task**
+- **Maximum 3 levels of nesting**
+- **Avoid magic numbers** - use constants
+- **Type hints** for arguments and return values
 
 ```python
-# Źle
+# Bad
 def process(d, n):
     for i in range(n):
         if d[i] > 100:
             d[i] = 100
     return d
 
-# Dobrze
+# Good
 def clamp_values(data: list[int], max_value: int = 100) -> list[int]:
-    """Ogranicza wartości w liście do maksymalnej wartości."""
+    """Clamps values in list to maximum value."""
     return [min(value, max_value) for value in data]
 ```
 
-### 4. Testy
+### 4. Testing
 
-#### Wymagane pokrycie kodu: minimum 80%
+#### Required code coverage: minimum 80%
 
 ```bash
-# Sprawdź coverage
+# Check coverage
 pytest --cov=src --cov-report=term-missing --cov-fail-under=80
 ```
 
-**Kod bez 80% pokrycia testami NIE może być ucommitowany.**
+**Code without 80% test coverage CANNOT be committed.**
 
-#### Struktura testów
+#### Test Structure
 
 ```python
-"""Testy dla modułu product_scraper."""
+"""Tests for product_scraper module."""
 
 import pytest
 from src.scrapers.product_scraper import ProductScraper
 
 
 class TestProductScraper:
-    """Testy klasy ProductScraper."""
+    """Tests for ProductScraper class."""
 
     def test_parse_extracts_title(self):
-        """Test czy parse wyciąga tytuł produktu."""
+        """Test that parse extracts product title."""
         # Arrange
         html = "<div class='product'><h1>Test Product</h1></div>"
         scraper = ProductScraper()
@@ -339,7 +339,7 @@ class TestProductScraper:
         assert result["title"] == "Test Product"
 
     def test_parse_handles_missing_title(self):
-        """Test czy parse obsługuje brak tytułu."""
+        """Test that parse handles missing title."""
         html = "<div class='product'></div>"
         scraper = ProductScraper()
 
@@ -348,68 +348,68 @@ class TestProductScraper:
         assert result["title"] is None
 ```
 
-#### Nazewnictwo testów
+#### Test Naming
 
 ```
-test_<co_testujemy>_<scenariusz>_<oczekiwany_rezultat>
+test_<what_we_test>_<scenario>_<expected_result>
 
 test_parse_with_valid_html_returns_product_dict
 test_fetch_when_timeout_raises_exception
 test_run_with_empty_urls_returns_empty_list
 ```
 
-#### Uruchamianie testów
+#### Running Tests
 
 ```bash
-# Wszystkie testy
+# All tests
 pytest
 
-# Konkretny plik
+# Specific file
 pytest tests/test_scraper.py
 
-# Konkretny test
+# Specific test
 pytest tests/test_scraper.py::TestProductScraper::test_parse_extracts_title
 
-# Z coverage
+# With coverage
 pytest --cov=src --cov-report=html
 
 # Verbose
 pytest -v
 ```
 
-### 5. Git workflow
+### 5. Git Workflow
 
 ```bash
-# Przed commitem
-pytest                    # Testy muszą przechodzić
-ruff check src/ tests/    # Linting (opcjonalnie)
+# Before commit
+pytest                    # Tests must pass
+ruff check src/ tests/    # Linting (optional)
 
 # Commit message format
-git commit -m "feat: dodaj scraper produktów"
-git commit -m "fix: napraw parsowanie cen"
-git commit -m "test: dodaj testy dla ProductScraper"
-git commit -m "refactor: wydziel metodę _parse_price"
+git commit -m "feat: add product scraper"
+git commit -m "fix: fix price parsing"
+git commit -m "test: add tests for ProductScraper"
+git commit -m "refactor: extract _parse_price method"
 ```
 
 ---
 
-## Komendy
+## Commands
 
-| Komenda | Opis |
-|---------|------|
-| `pytest` | Uruchom testy |
-| `pytest -v` | Testy z detalami |
-| `pytest --cov=src --cov-fail-under=80` | Testy z coverage (min 80%) |
-| `uvicorn src.api.main:app --reload` | Uruchom API (dev) |
-| `docker compose up` | Uruchom w Docker (dev) |
-| `docker compose -f docker-compose.prod.yml up -d` | Uruchom w Docker (prod) |
+| Command | Description |
+|---------|-------------|
+| `pytest` | Run tests |
+| `pytest -v` | Run tests with details |
+| `pytest --cov=src --cov-fail-under=80` | Tests with coverage (min 80%) |
+| `uvicorn src.api.main:app --reload` | Run API (dev) |
+| `docker compose up` | Run in Docker (dev) |
+| `docker compose -f docker-compose.prod.yml up -d` | Run in Docker (prod) |
 
-## Zmienne środowiskowe
+## Environment Variables
 
-| Zmienna | Opis | Domyślnie |
-|---------|------|-----------|
-| `DEBUG` | Tryb debug | `False` |
-| `LOG_LEVEL` | Poziom logowania | `INFO` |
-| `REQUEST_TIMEOUT` | Timeout requestów (s) | `30` |
-| `REQUEST_DELAY` | Opóźnienie między requestami (s) | `1.0` |
-| `MAX_RETRIES` | Liczba ponowień | `3` |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DEBUG` | Debug mode | `False` |
+| `LOG_LEVEL` | Logging level | `INFO` |
+| `REQUEST_TIMEOUT` | Request timeout (s) | `30` |
+| `REQUEST_DELAY` | Delay between requests (s) | `1.0` |
+| `MAX_RETRIES` | Number of retries | `3` |

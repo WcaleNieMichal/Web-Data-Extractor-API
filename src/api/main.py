@@ -1,62 +1,62 @@
-"""Główna aplikacja FastAPI dla Web Scrapers API."""
+"""Main FastAPI application for Web Scrapers API."""
 
 from fastapi import FastAPI
 
 from src.api.routers import books_router, oscars_router, quotes_router
 
-# Metadane tagów - linki do stron źródłowych
+# Tag metadata - links to source websites
 tags_metadata = [
     {
         "name": "books",
-        "description": "Książki z **books.toscrape.com**",
+        "description": "Books from **books.toscrape.com**",
         "externalDocs": {
-            "description": "Strona źródłowa",
+            "description": "Source website",
             "url": "https://books.toscrape.com",
         },
     },
     {
         "name": "quotes",
-        "description": "Cytaty z **quotes.toscrape.com**",
+        "description": "Quotes from **quotes.toscrape.com**",
         "externalDocs": {
-            "description": "Strona źródłowa",
+            "description": "Source website",
             "url": "https://quotes.toscrape.com",
         },
     },
     {
         "name": "oscars",
-        "description": "Filmy oscarowe z **scrapethissite.com**",
+        "description": "Oscar-winning films from **scrapethissite.com**",
         "externalDocs": {
-            "description": "Strona źródłowa",
+            "description": "Source website",
             "url": "https://www.scrapethissite.com/pages/ajax-javascript/",
         },
     },
     {
         "name": "system",
-        "description": "Endpointy systemowe (health check)",
+        "description": "System endpoints (health check)",
     },
 ]
 
 app = FastAPI(
     title="Web Scrapers API",
     description="""
-API do pobierania danych z różnych stron internetowych.
+API for fetching data from various websites.
 
-## Dostępne scrapery
+## Available Scrapers
 
-* **Books** - książki z [books.toscrape.com](https://books.toscrape.com)
-* **Quotes** - cytaty z [quotes.toscrape.com](https://quotes.toscrape.com)
-* **Oscars** - filmy oscarowe z [scrapethissite.com](https://www.scrapethissite.com)
+* **Books** - books from [books.toscrape.com](https://books.toscrape.com)
+* **Quotes** - quotes from [quotes.toscrape.com](https://quotes.toscrape.com)
+* **Oscars** - Oscar-winning films from [scrapethissite.com](https://www.scrapethissite.com)
 
-## Formaty danych
+## Data Formats
 
-Każdy endpoint obsługuje trzy formaty wyjścia:
-- **JSON** (domyślny) - zwraca dane w formacie JSON
-- **CSV** - pobieranie pliku CSV
-- **Excel** - pobieranie pliku XLSX
+Each endpoint supports three output formats:
+- **JSON** (default) - returns data in JSON format
+- **CSV** - downloadable CSV file
+- **Excel** - downloadable XLSX file
 
-## Użycie
+## Usage
 
-Kliknij **"Try it out"** przy każdym endpoincie, aby przetestować API bezpośrednio w przeglądarce.
+Click **"Try it out"** on any endpoint to test the API directly in browser.
     """,
     version="1.0.0",
     openapi_tags=tags_metadata,
@@ -64,7 +64,7 @@ Kliknij **"Try it out"** przy każdym endpoincie, aby przetestować API bezpośr
     redoc_url="/redoc",
 )
 
-# Rejestracja routerów
+# Register routers
 app.include_router(books_router)
 app.include_router(quotes_router)
 app.include_router(oscars_router)
@@ -72,17 +72,17 @@ app.include_router(oscars_router)
 
 @app.get("/health", tags=["system"], summary="Health check")
 async def health_check() -> dict:
-    """Sprawdza czy API działa poprawnie.
+    """Checks if API is running correctly.
 
     Returns:
-        Status i wersja API.
+        API status and version.
     """
     return {"status": "healthy", "version": "1.0.0"}
 
 
 @app.get("/", include_in_schema=False)
 async def root() -> dict:
-    """Przekierowanie do dokumentacji."""
+    """Redirect to documentation."""
     return {
         "message": "Web Scrapers API",
         "docs": "/docs",

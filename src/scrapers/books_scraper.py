@@ -1,4 +1,4 @@
-"""Scraper dla strony books.toscrape.com."""
+"""Scraper for books.toscrape.com website."""
 
 import csv
 import io
@@ -14,24 +14,24 @@ from config.settings import DEFAULT_HEADERS, REQUEST_TIMEOUT
 
 
 class BooksScraper:
-    """Scraper do pobierania danych książek z books.toscrape.com.
+    """Scraper for fetching book data from books.toscrape.com.
 
-    Pobiera książki z wybranej kategorii lub strony głównej.
+    Fetches books from selected category or homepage.
 
     Attributes:
-        category: Slug kategorii (np. "travel_2"). Domyślnie "books_1".
-        pages: Liczba stron do pobrania.
-        output_format: Format wyjścia - "json", "csv" lub "excel".
+        category: Category slug (e.g. "travel_2"). Defaults to "books_1".
+        pages: Number of pages to fetch.
+        output_format: Output format - "json", "csv" or "excel".
 
     Example:
         >>> scraper = BooksScraper(category="mystery", pages=2)
-        >>> json_str = scraper.get()  # domyślnie JSON
+        >>> json_str = scraper.get()  # default JSON
 
         >>> scraper = BooksScraper(category="horror", output_format="csv")
         >>> csv_str = scraper.get()
 
         >>> scraper = BooksScraper(output_format="excel")
-        >>> excel_bytes = scraper.get()  # bytes do zapisu
+        >>> excel_bytes = scraper.get()  # bytes for saving
     """
 
     BASE_URL = "https://books.toscrape.com/catalogue/category/books/{category}"
@@ -102,59 +102,59 @@ class BooksScraper:
         pages: int | None = None,
         output_format: Literal["json", "csv", "excel"] = "json",
     ):
-        """Inicjalizuje scraper.
+        """Initializes scraper.
 
         Args:
-            category: Nazwa kategorii (np. "mystery", "horror") lub slug.
-                      None = wszystkie książki (books_1).
-            pages: Liczba stron do pobrania. None = wszystkie strony.
-            output_format: Format wyjścia - "json", "csv" lub "excel".
-                          Domyślnie "json".
+            category: Category name (e.g. "mystery", "horror") or slug.
+                      None = all books (books_1).
+            pages: Number of pages to fetch. None = all pages.
+            output_format: Output format - "json", "csv" or "excel".
+                          Defaults to "json".
         """
         self.category = self._resolve_category(category)
-        self.pages = pages  # None = auto (wszystkie strony)
+        self.pages = pages  # None = auto (all pages)
         self.output_format = output_format
 
     def _resolve_category(self, category: str | None) -> str:
-        """Zamienia nazwę kategorii na slug.
+        """Converts category name to slug.
 
         Args:
-            category: Nazwa kategorii lub slug.
+            category: Category name or slug.
 
         Returns:
-            Slug kategorii (np. "mystery_3").
+            Category slug (e.g. "mystery_3").
 
         Raises:
-            ValueError: Gdy kategoria nie istnieje.
+            ValueError: When category doesn't exist.
         """
         if not category:
             return "books_1"
 
         key = category.lower().strip()
 
-        # Nazwa kategorii (np. "mystery")
+        # Category name (e.g. "mystery")
         if key in self.CATEGORIES:
             return self.CATEGORIES[key]
 
-        # Slug kategorii (np. "mystery_3")
+        # Category slug (e.g. "mystery_3")
         if key in self.CATEGORIES.values():
             return key
 
-        # Nieznana kategoria
+        # Unknown category
         available = ", ".join(sorted(self.CATEGORIES.keys())[:10])
         raise ValueError(
-            f"Nieznana kategoria: '{category}'. "
-            f"Dostępne: {available}, ..."
+            f"Unknown category: '{category}'. "
+            f"Available: {available}, ..."
         )
 
     def build_url(self, page: int = 1) -> str:
-        """Buduje URL dla danej strony kategorii.
+        """Builds URL for given category page.
 
         Args:
-            page: Numer strony.
+            page: Page number.
 
         Returns:
-            Pełny URL do strony.
+            Full URL to page.
         """
         base = self.BASE_URL.format(category=self.category)
         if page == 1:
@@ -162,16 +162,16 @@ class BooksScraper:
         return f"{base}/page-{page}.html"
 
     def fetch(self, page: int = 1) -> str:
-        """Pobiera HTML strony.
+        """Fetches page HTML.
 
         Args:
-            page: Numer strony do pobrania.
+            page: Page number to fetch.
 
         Returns:
-            HTML strony jako string.
+            Page HTML as string.
 
         Raises:
-            requests.RequestException: Gdy nie udało się pobrać strony.
+            requests.RequestException: When page fetch fails.
         """
         url = self.build_url(page)
         logger.debug(f"Fetching: {url}")
@@ -183,13 +183,13 @@ class BooksScraper:
         return response.text
 
     def parse(self, html: str) -> list[dict]:
-        """Parsuje HTML i wyciąga dane książek.
+        """Parses HTML and extracts book data.
 
         Args:
-            html: String z HTML do sparsowania.
+            html: HTML string to parse.
 
         Returns:
-            Lista słowników z danymi książek.
+            List of dictionaries with book data.
         """
         soup = BeautifulSoup(html, "lxml")
         books = []
@@ -201,22 +201,22 @@ class BooksScraper:
         return books
 
     def _parse_book(self, article: BeautifulSoup) -> dict:
-        """Parsuje pojedynczy element article z książką.
+        """Parses single article element with book.
 
         Args:
-            article: Element BeautifulSoup z danymi książki.
+            article: BeautifulSoup element with book data.
 
         Returns:
-            Słownik z danymi książki.
+            Dictionary with book data.
         """
-        # Tytuł
+        # Title
         title_elem = article.select_one("h3 a")
         title = title_elem.get("title") if title_elem else None
 
         # URL
         url = title_elem.get("href") if title_elem else None
 
-        # Cena
+        # Price
         price_elem = article.select_one(".price_color")
         price = price_elem.get_text(strip=True) if price_elem else None
         price_float = self._parse_price(price)
@@ -225,7 +225,7 @@ class BooksScraper:
         rating_elem = article.select_one(".star-rating")
         rating = self._parse_rating(rating_elem)
 
-        # Dostępność
+        # Availability
         availability_elem = article.select_one(".availability")
         in_stock = self._parse_availability(availability_elem)
 
@@ -239,13 +239,13 @@ class BooksScraper:
         }
 
     def _parse_price(self, price: str | None) -> float | None:
-        """Parsuje cenę z stringa na float.
+        """Parses price from string to float.
 
         Args:
-            price: Cena jako string (np. "£51.77").
+            price: Price as string (e.g. "£51.77").
 
         Returns:
-            Cena jako float lub None.
+            Price as float or None.
         """
         if not price:
             return None
@@ -256,13 +256,13 @@ class BooksScraper:
         return None
 
     def _parse_rating(self, rating_elem) -> int | None:
-        """Parsuje rating z elementu HTML.
+        """Parses rating from HTML element.
 
         Args:
-            rating_elem: Element BeautifulSoup z klasą star-rating.
+            rating_elem: BeautifulSoup element with star-rating class.
 
         Returns:
-            Rating jako int (1-5) lub None.
+            Rating as int (1-5) or None.
         """
         if not rating_elem:
             return None
@@ -274,13 +274,13 @@ class BooksScraper:
         return None
 
     def _parse_availability(self, availability_elem) -> bool:
-        """Parsuje dostępność z elementu HTML.
+        """Parses availability from HTML element.
 
         Args:
-            availability_elem: Element z informacją o dostępności.
+            availability_elem: Element with availability info.
 
         Returns:
-            True jeśli w magazynie, False w przeciwnym razie.
+            True if in stock, False otherwise.
         """
         if not availability_elem:
             return False
@@ -289,13 +289,13 @@ class BooksScraper:
         return "in stock" in text
 
     def _to_csv(self, books: list[dict]) -> str:
-        """Konwertuje listę książek do formatu CSV.
+        """Converts book list to CSV format.
 
         Args:
-            books: Lista słowników z danymi książek.
+            books: List of dictionaries with book data.
 
         Returns:
-            String CSV.
+            CSV string.
         """
         if not books:
             return ""
@@ -308,13 +308,13 @@ class BooksScraper:
         return output.getvalue()
 
     def _to_excel(self, books: list[dict]) -> bytes:
-        """Konwertuje listę książek do formatu Excel (bytes).
+        """Converts book list to Excel format (bytes).
 
         Args:
-            books: Lista słowników z danymi książek.
+            books: List of dictionaries with book data.
 
         Returns:
-            Plik XLSX jako bytes.
+            XLSX file as bytes.
         """
         import pandas as pd
 
@@ -324,13 +324,13 @@ class BooksScraper:
         return output.getvalue()
 
     def get(self, html: str | None = None) -> str | bytes:
-        """Pobiera książki i zwraca w formacie ustawionym w konstruktorze.
+        """Fetches books and returns in format set in constructor.
 
         Args:
-            html: Opcjonalny HTML do sparsowania (zamiast pobierania).
+            html: Optional HTML to parse (instead of fetching).
 
         Returns:
-            JSON string, CSV string lub Excel bytes.
+            JSON string, CSV string or Excel bytes.
 
         Example:
             >>> scraper = BooksScraper(category="travel_2", pages=3)
@@ -345,7 +345,7 @@ class BooksScraper:
             all_books = self.parse(html)
         else:
             page = 1
-            max_pages = self.pages if self.pages else 100  # Limit bezpieczeństwa
+            max_pages = self.pages if self.pages else 100  # Safety limit
 
             while page <= max_pages:
                 try:
@@ -353,13 +353,13 @@ class BooksScraper:
                     books = self.parse(page_html)
 
                     if not books:
-                        break  # Brak książek = koniec paginacji
+                        break  # No books = end of pagination
 
                     all_books.extend(books)
                     logger.info(f"Page {page}: {len(books)} books")
 
-                    # Jeśli pages=None (auto), kontynuuj
-                    # Jeśli pages ustawione, sprawdź limit
+                    # If pages=None (auto), continue
+                    # If pages set, check limit
                     if self.pages and page >= self.pages:
                         break
 
@@ -367,7 +367,7 @@ class BooksScraper:
 
                 except requests.RequestException as e:
                     logger.debug(f"Page {page} not found: {e}")
-                    break  # 404 = koniec paginacji
+                    break  # 404 = end of pagination
 
         logger.info(f"Total books: {len(all_books)}")
 

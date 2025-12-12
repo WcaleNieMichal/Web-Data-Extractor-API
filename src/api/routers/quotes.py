@@ -1,4 +1,4 @@
-"""Router dla endpointu /api/quotes."""
+"""Router for /api/quotes endpoint."""
 
 from enum import Enum
 from typing import Annotated
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/quotes", tags=["quotes"])
 
 
 class OutputFormat(str, Enum):
-    """Dostępne formaty wyjścia."""
+    """Available output formats."""
 
     json = "json"
     csv = "csv"
@@ -23,12 +23,12 @@ class OutputFormat(str, Enum):
 @router.get(
     "",
     response_model=list[QuoteSchema],
-    summary="Pobierz cytaty",
-    description="Pobiera cytaty z quotes.toscrape.com. "
-    "Możesz filtrować po tagu i ograniczyć liczbę stron.",
+    summary="Get quotes",
+    description="Fetches quotes from quotes.toscrape.com. "
+    "You can filter by tag and limit number of pages.",
     responses={
         200: {
-            "description": "Lista cytatów",
+            "description": "List of quotes",
             "content": {
                 "application/json": {
                     "example": [
@@ -42,26 +42,26 @@ class OutputFormat(str, Enum):
                 },
                 "text/csv": {"example": "text,author,author_url,tags\n..."},
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
-                    "example": "(plik Excel do pobrania)"
+                    "example": "(downloadable Excel file)"
                 },
             },
         },
-        500: {"description": "Błąd serwera lub scrapera"},
+        500: {"description": "Server or scraper error"},
     },
 )
 async def get_quotes(
     tag: Annotated[
         str | None,
         Query(
-            description="Tag do filtrowania (np. love, life, inspirational). "
-            "Puste = wszystkie cytaty.",
+            description="Tag to filter by (e.g. love, life, inspirational). "
+            "Empty = all quotes.",
             examples=["love", "life", "inspirational", "humor"],
         ),
     ] = None,
     pages: Annotated[
         int | None,
         Query(
-            description="Liczba stron do pobrania. Puste = wszystkie strony.",
+            description="Number of pages to fetch. Empty = all pages.",
             ge=1,
             le=50,
             examples=[1, 2, 5],
@@ -69,21 +69,21 @@ async def get_quotes(
     ] = None,
     format: Annotated[
         OutputFormat,
-        Query(description="Format odpowiedzi: json, csv lub excel"),
+        Query(description="Response format: json, csv or excel"),
     ] = OutputFormat.json,
 ) -> Response | list[dict]:
-    """Pobiera cytaty z quotes.toscrape.com.
+    """Fetches quotes from quotes.toscrape.com.
 
     Args:
-        tag: Tag do filtrowania (opcjonalne).
-        pages: Liczba stron do pobrania (opcjonalne).
-        format: Format wyjścia - json, csv lub excel.
+        tag: Tag to filter by (optional).
+        pages: Number of pages to fetch (optional).
+        format: Output format - json, csv or excel.
 
     Returns:
-        Lista cytatów w wybranym formacie.
+        List of quotes in selected format.
 
     Raises:
-        HTTPException: 500 dla błędów scrapera.
+        HTTPException: 500 for scraper errors.
     """
     try:
         scraper = QuotesScraper(
@@ -107,10 +107,10 @@ async def get_quotes(
                 headers={"Content-Disposition": "attachment; filename=quotes.xlsx"},
             )
 
-        # JSON - parsuj string na listę
+        # JSON - parse string to list
         import json
 
         return json.loads(result)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Błąd scrapera: {e}") from e
+        raise HTTPException(status_code=500, detail=f"Scraper error: {e}") from e

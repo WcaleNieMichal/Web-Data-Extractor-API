@@ -1,4 +1,4 @@
-"""Scraper dla strony scrapethissite.com - filmy oscarowe."""
+"""Scraper for scrapethissite.com - Oscar-winning films."""
 
 import csv
 import io
@@ -12,20 +12,20 @@ from config.settings import DEFAULT_HEADERS, REQUEST_TIMEOUT
 
 
 class OscarsScraper:
-    """Scraper do pobierania danych o filmach oscarowych.
+    """Scraper for fetching Oscar-winning film data.
 
-    Pobiera dane z API AJAX strony scrapethissite.com.
+    Fetches data from AJAX API at scrapethissite.com.
 
     Attributes:
-        year: Rok ceremonii (2010-2015). None = wszystkie lata.
-        output_format: Format wyjścia - "json", "csv" lub "excel".
+        year: Ceremony year (2010-2015). None = all years.
+        output_format: Output format - "json", "csv" or "excel".
 
     Example:
         >>> scraper = OscarsScraper(year=2015)
-        >>> json_str = scraper.get()  # domyślnie JSON
+        >>> json_str = scraper.get()  # default JSON
 
         >>> scraper = OscarsScraper(output_format="csv")
-        >>> csv_str = scraper.get()  # wszystkie lata
+        >>> csv_str = scraper.get()  # all years
 
         >>> scraper = OscarsScraper(year=2014, output_format="excel")
         >>> excel_bytes = scraper.get()
@@ -39,15 +39,15 @@ class OscarsScraper:
         year: int | None = None,
         output_format: Literal["json", "csv", "excel"] = "json",
     ):
-        """Inicjalizuje scraper.
+        """Initializes scraper.
 
         Args:
-            year: Rok ceremonii (2010-2015). None = wszystkie lata.
-            output_format: Format wyjścia - "json", "csv" lub "excel".
-                          Domyślnie "json".
+            year: Ceremony year (2010-2015). None = all years.
+            output_format: Output format - "json", "csv" or "excel".
+                          Defaults to "json".
 
         Raises:
-            ValueError: Gdy rok jest poza zakresem 2010-2015.
+            ValueError: When year is outside 2010-2015 range.
         """
         if year is not None:
             self._validate_year(year)
@@ -55,43 +55,43 @@ class OscarsScraper:
         self.output_format = output_format
 
     def _validate_year(self, year: int) -> None:
-        """Waliduje rok.
+        """Validates year.
 
         Args:
-            year: Rok do walidacji.
+            year: Year to validate.
 
         Raises:
-            ValueError: Gdy rok jest poza zakresem.
+            ValueError: When year is outside range.
         """
         if year not in self.AVAILABLE_YEARS:
             available = ", ".join(str(y) for y in self.AVAILABLE_YEARS)
             raise ValueError(
-                f"Niepoprawny rok: {year}. "
-                f"Dostępne: {available}"
+                f"Invalid year: {year}. "
+                f"Available: {available}"
             )
 
     def build_url(self, year: int) -> str:
-        """Buduje URL dla danego roku.
+        """Builds URL for given year.
 
         Args:
-            year: Rok ceremonii.
+            year: Ceremony year.
 
         Returns:
-            Pełny URL do API.
+            Full URL to API.
         """
         return f"{self.BASE_URL}?ajax=true&year={year}"
 
     def fetch(self, year: int) -> list[dict]:
-        """Pobiera dane z API dla danego roku.
+        """Fetches data from API for given year.
 
         Args:
-            year: Rok ceremonii.
+            year: Ceremony year.
 
         Returns:
-            Lista słowników z danymi filmów.
+            List of dictionaries with film data.
 
         Raises:
-            requests.RequestException: Gdy nie udało się pobrać danych.
+            requests.RequestException: When data fetch fails.
         """
         url = self.build_url(year)
         logger.debug(f"Fetching: {url}")
@@ -102,13 +102,13 @@ class OscarsScraper:
         return response.json()
 
     def _clean_film(self, film: dict) -> dict:
-        """Czyści i normalizuje dane filmu.
+        """Cleans and normalizes film data.
 
         Args:
-            film: Surowe dane filmu z API.
+            film: Raw film data from API.
 
         Returns:
-            Oczyszczony słownik z danymi filmu.
+            Cleaned dictionary with film data.
         """
         return {
             "title": film.get("title", "").strip(),
@@ -119,13 +119,13 @@ class OscarsScraper:
         }
 
     def _to_csv(self, films: list[dict]) -> str:
-        """Konwertuje listę filmów do formatu CSV.
+        """Converts film list to CSV format.
 
         Args:
-            films: Lista słowników z danymi filmów.
+            films: List of dictionaries with film data.
 
         Returns:
-            String CSV.
+            CSV string.
         """
         if not films:
             return ""
@@ -138,13 +138,13 @@ class OscarsScraper:
         return output.getvalue()
 
     def _to_excel(self, films: list[dict]) -> bytes:
-        """Konwertuje listę filmów do formatu Excel (bytes).
+        """Converts film list to Excel format (bytes).
 
         Args:
-            films: Lista słowników z danymi filmów.
+            films: List of dictionaries with film data.
 
         Returns:
-            Plik XLSX jako bytes.
+            XLSX file as bytes.
         """
         import pandas as pd
 
@@ -154,10 +154,10 @@ class OscarsScraper:
         return output.getvalue()
 
     def get(self) -> str | bytes:
-        """Pobiera filmy i zwraca w formacie ustawionym w konstruktorze.
+        """Fetches films and returns in format set in constructor.
 
         Returns:
-            JSON string, CSV string lub Excel bytes.
+            JSON string, CSV string or Excel bytes.
 
         Example:
             >>> scraper = OscarsScraper(year=2015)

@@ -1,22 +1,22 @@
-"""Konfiguracja aplikacji z obsługą środowisk.
+"""Application configuration with environment support.
 
-Obsługiwane środowiska: dev, test, prod
-Ustaw zmienną ENV aby wybrać środowisko.
+Supported environments: dev, test, prod
+Set ENV variable to select environment.
 """
 
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Określ środowisko
+# Determine environment
 ENV = os.getenv("ENV", "dev")
 
-# Załaduj odpowiedni plik .env
+# Load appropriate .env file
 env_file = Path(__file__).resolve().parent.parent / f".env.{ENV}"
 if env_file.exists():
     load_dotenv(env_file)
 else:
-    load_dotenv()  # Fallback do .env
+    load_dotenv()  # Fallback to .env
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent

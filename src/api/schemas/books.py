@@ -6,12 +6,12 @@ from pydantic import BaseModel, Field
 class BookSchema(BaseModel):
     """Schema for a book item."""
 
-    title: str = Field(..., description="Tytuł książki")
-    price: str = Field(..., description="Cena z symbolem waluty (np. £51.77)")
-    price_float: float = Field(..., description="Cena jako liczba")
-    rating: int = Field(..., ge=1, le=5, description="Ocena 1-5 gwiazdek")
-    in_stock: bool = Field(..., description="Czy dostępna w magazynie")
-    url: str = Field(..., description="Relatywny URL do strony książki")
+    title: str = Field(..., description="Book title")
+    price: str = Field(..., description="Price with currency symbol (e.g. £51.77)")
+    price_float: float = Field(..., description="Price as number")
+    rating: int = Field(..., ge=1, le=5, description="Rating 1-5 stars")
+    in_stock: bool = Field(..., description="Whether available in stock")
+    url: str = Field(..., description="Relative URL to book page")
 
     model_config = {
         "json_schema_extra": {

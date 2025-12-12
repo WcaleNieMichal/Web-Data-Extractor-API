@@ -1,4 +1,4 @@
-"""Router dla endpointu /api/oscars."""
+"""Router for /api/oscars endpoint."""
 
 from enum import Enum
 from typing import Annotated
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/oscars", tags=["oscars"])
 
 
 class OutputFormat(str, Enum):
-    """Dostępne formaty wyjścia."""
+    """Available output formats."""
 
     json = "json"
     csv = "csv"
@@ -23,12 +23,12 @@ class OutputFormat(str, Enum):
 @router.get(
     "",
     response_model=list[OscarFilmSchema],
-    summary="Pobierz filmy oscarowe",
-    description="Pobiera dane o filmach oscarowych z API scrapethissite.com. "
-    "Dostępne lata: 2010-2015.",
+    summary="Get Oscar-winning films",
+    description="Fetches Oscar-winning film data from scrapethissite.com API. "
+    "Available years: 2010-2015.",
     responses={
         200: {
-            "description": "Lista filmów oscarowych",
+            "description": "List of Oscar-winning films",
             "content": {
                 "application/json": {
                     "example": [
@@ -43,19 +43,19 @@ class OutputFormat(str, Enum):
                 },
                 "text/csv": {"example": "title,year,awards,nominations,best_picture\n..."},
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
-                    "example": "(plik Excel do pobrania)"
+                    "example": "(downloadable Excel file)"
                 },
             },
         },
-        400: {"description": "Błędne parametry (np. rok poza zakresem 2010-2015)"},
-        500: {"description": "Błąd serwera lub scrapera"},
+        400: {"description": "Invalid parameters (e.g. year outside 2010-2015 range)"},
+        500: {"description": "Server or scraper error"},
     },
 )
 async def get_oscars(
     year: Annotated[
         int | None,
         Query(
-            description="Rok ceremonii Oscar (2010-2015). Puste = wszystkie lata.",
+            description="Oscar ceremony year (2010-2015). Empty = all years.",
             ge=2010,
             le=2015,
             examples=[2015, 2014, 2010],
@@ -63,20 +63,20 @@ async def get_oscars(
     ] = None,
     format: Annotated[
         OutputFormat,
-        Query(description="Format odpowiedzi: json, csv lub excel"),
+        Query(description="Response format: json, csv or excel"),
     ] = OutputFormat.json,
 ) -> Response | list[dict]:
-    """Pobiera filmy oscarowe z scrapethissite.com.
+    """Fetches Oscar-winning films from scrapethissite.com.
 
     Args:
-        year: Rok ceremonii (2010-2015, opcjonalne).
-        format: Format wyjścia - json, csv lub excel.
+        year: Ceremony year (2010-2015, optional).
+        format: Output format - json, csv or excel.
 
     Returns:
-        Lista filmów oscarowych w wybranym formacie.
+        List of Oscar-winning films in selected format.
 
     Raises:
-        HTTPException: 400 dla błędnych parametrów, 500 dla błędów scrapera.
+        HTTPException: 400 for invalid parameters, 500 for scraper errors.
     """
     try:
         scraper = OscarsScraper(
@@ -99,7 +99,7 @@ async def get_oscars(
                 headers={"Content-Disposition": "attachment; filename=oscars.xlsx"},
             )
 
-        # JSON - parsuj string na listę
+        # JSON - parse string to list
         import json
 
         return json.loads(result)
@@ -107,4 +107,4 @@ async def get_oscars(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Błąd scrapera: {e}") from e
+        raise HTTPException(status_code=500, detail=f"Scraper error: {e}") from e

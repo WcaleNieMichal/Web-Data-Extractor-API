@@ -1,4 +1,4 @@
-"""Router dla endpointu /api/books."""
+"""Router for /api/books endpoint."""
 
 from enum import Enum
 from typing import Annotated
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/books", tags=["books"])
 
 
 class OutputFormat(str, Enum):
-    """Dostępne formaty wyjścia."""
+    """Available output formats."""
 
     json = "json"
     csv = "csv"
@@ -23,12 +23,12 @@ class OutputFormat(str, Enum):
 @router.get(
     "",
     response_model=list[BookSchema],
-    summary="Pobierz książki",
-    description="Pobiera książki z books.toscrape.com. "
-    "Możesz filtrować po kategorii i ograniczyć liczbę stron.",
+    summary="Get books",
+    description="Fetches books from books.toscrape.com. "
+    "You can filter by category and limit number of pages.",
     responses={
         200: {
-            "description": "Lista książek",
+            "description": "List of books",
             "content": {
                 "application/json": {
                     "example": [
@@ -44,27 +44,27 @@ class OutputFormat(str, Enum):
                 },
                 "text/csv": {"example": "title,price,price_float,rating,in_stock,url\n..."},
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
-                    "example": "(plik Excel do pobrania)"
+                    "example": "(downloadable Excel file)"
                 },
             },
         },
-        400: {"description": "Błędne parametry (np. nieznana kategoria)"},
-        500: {"description": "Błąd serwera lub scrapera"},
+        400: {"description": "Invalid parameters (e.g. unknown category)"},
+        500: {"description": "Server or scraper error"},
     },
 )
 async def get_books(
     category: Annotated[
         str | None,
         Query(
-            description="Kategoria książek (np. mystery, horror, travel). "
-            "Puste = wszystkie książki.",
+            description="Book category (e.g. mystery, horror, travel). "
+            "Empty = all books.",
             examples=["mystery", "horror", "travel", "science-fiction"],
         ),
     ] = None,
     pages: Annotated[
         int | None,
         Query(
-            description="Liczba stron do pobrania. Puste = wszystkie strony.",
+            description="Number of pages to fetch. Empty = all pages.",
             ge=1,
             le=50,
             examples=[1, 2, 5],
@@ -72,21 +72,21 @@ async def get_books(
     ] = None,
     format: Annotated[
         OutputFormat,
-        Query(description="Format odpowiedzi: json, csv lub excel"),
+        Query(description="Response format: json, csv or excel"),
     ] = OutputFormat.json,
 ) -> Response | list[dict]:
-    """Pobiera książki z books.toscrape.com.
+    """Fetches books from books.toscrape.com.
 
     Args:
-        category: Kategoria książek (opcjonalne).
-        pages: Liczba stron do pobrania (opcjonalne).
-        format: Format wyjścia - json, csv lub excel.
+        category: Book category (optional).
+        pages: Number of pages to fetch (optional).
+        format: Output format - json, csv or excel.
 
     Returns:
-        Lista książek w wybranym formacie.
+        List of books in selected format.
 
     Raises:
-        HTTPException: 400 dla błędnych parametrów, 500 dla błędów scrapera.
+        HTTPException: 400 for invalid parameters, 500 for scraper errors.
     """
     try:
         scraper = BooksScraper(
@@ -110,7 +110,7 @@ async def get_books(
                 headers={"Content-Disposition": "attachment; filename=books.xlsx"},
             )
 
-        # JSON - parsuj string na listę
+        # JSON - parse string to list
         import json
 
         return json.loads(result)
@@ -118,4 +118,4 @@ async def get_books(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Błąd scrapera: {e}") from e
+        raise HTTPException(status_code=500, detail=f"Scraper error: {e}") from e

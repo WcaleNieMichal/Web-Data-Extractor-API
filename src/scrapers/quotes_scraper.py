@@ -1,4 +1,4 @@
-"""Scraper dla strony quotes.toscrape.com."""
+"""Scraper for quotes.toscrape.com website."""
 
 import csv
 import io
@@ -13,24 +13,24 @@ from config.settings import DEFAULT_HEADERS, REQUEST_TIMEOUT
 
 
 class QuotesScraper:
-    """Scraper do pobierania cytatów z quotes.toscrape.com.
+    """Scraper for fetching quotes from quotes.toscrape.com.
 
-    Pobiera cytaty ze strony głównej lub filtrowane po tagu.
+    Fetches quotes from homepage or filtered by tag.
 
     Attributes:
-        tag: Tag do filtrowania (np. "love", "life"). None = wszystkie.
-        pages: Liczba stron do pobrania.
-        output_format: Format wyjścia - "json", "csv" lub "excel".
+        tag: Tag to filter by (e.g. "love", "life"). None = all quotes.
+        pages: Number of pages to fetch.
+        output_format: Output format - "json", "csv" or "excel".
 
     Example:
         >>> scraper = QuotesScraper(tag="love", pages=2)
-        >>> json_str = scraper.get()  # domyślnie JSON
+        >>> json_str = scraper.get()  # default JSON
 
         >>> scraper = QuotesScraper(output_format="csv")
         >>> csv_str = scraper.get()
 
         >>> scraper = QuotesScraper(tag="life", output_format="excel")
-        >>> excel_bytes = scraper.get()  # bytes do zapisu
+        >>> excel_bytes = scraper.get()  # bytes for saving
     """
 
     BASE_URL = "https://quotes.toscrape.com"
@@ -41,43 +41,43 @@ class QuotesScraper:
         pages: int | None = None,
         output_format: Literal["json", "csv", "excel"] = "json",
     ):
-        """Inicjalizuje scraper.
+        """Initializes scraper.
 
         Args:
-            tag: Tag do filtrowania (np. "love", "inspirational").
-                 None = wszystkie cytaty.
-            pages: Liczba stron do pobrania. None = wszystkie strony.
-            output_format: Format wyjścia - "json", "csv" lub "excel".
-                          Domyślnie "json".
+            tag: Tag to filter by (e.g. "love", "inspirational").
+                 None = all quotes.
+            pages: Number of pages to fetch. None = all pages.
+            output_format: Output format - "json", "csv" or "excel".
+                          Defaults to "json".
         """
         self.tag = tag.lower().strip() if tag else None
         self.pages = pages
         self.output_format = output_format
 
     def build_url(self, page: int = 1) -> str:
-        """Buduje URL dla danej strony.
+        """Builds URL for given page.
 
         Args:
-            page: Numer strony.
+            page: Page number.
 
         Returns:
-            Pełny URL do strony.
+            Full URL to page.
         """
         if self.tag:
             return f"{self.BASE_URL}/tag/{self.tag}/page/{page}/"
         return f"{self.BASE_URL}/page/{page}/"
 
     def fetch(self, page: int = 1) -> str:
-        """Pobiera HTML strony.
+        """Fetches page HTML.
 
         Args:
-            page: Numer strony do pobrania.
+            page: Page number to fetch.
 
         Returns:
-            HTML strony jako string.
+            Page HTML as string.
 
         Raises:
-            requests.RequestException: Gdy nie udało się pobrać strony.
+            requests.RequestException: When page fetch fails.
         """
         url = self.build_url(page)
         logger.debug(f"Fetching: {url}")
@@ -89,13 +89,13 @@ class QuotesScraper:
         return response.text
 
     def parse(self, html: str) -> list[dict]:
-        """Parsuje HTML i wyciąga dane cytatów.
+        """Parses HTML and extracts quote data.
 
         Args:
-            html: String z HTML do sparsowania.
+            html: HTML string to parse.
 
         Returns:
-            Lista słowników z danymi cytatów.
+            List of dictionaries with quote data.
         """
         soup = BeautifulSoup(html, "lxml")
         quotes = []
@@ -107,30 +107,30 @@ class QuotesScraper:
         return quotes
 
     def _parse_quote(self, quote_div: BeautifulSoup) -> dict:
-        """Parsuje pojedynczy element div z cytatem.
+        """Parses single div element with quote.
 
         Args:
-            quote_div: Element BeautifulSoup z danymi cytatu.
+            quote_div: BeautifulSoup element with quote data.
 
         Returns:
-            Słownik z danymi cytatu.
+            Dictionary with quote data.
         """
-        # Tekst cytatu
+        # Quote text
         text_elem = quote_div.select_one("span.text")
         text = text_elem.get_text(strip=True) if text_elem else None
-        # Usuń cudzysłowy
+        # Remove quotation marks
         if text:
             text = text.strip("\u201c\u201d\"'")
 
-        # Autor
+        # Author
         author_elem = quote_div.select_one("small.author")
         author = author_elem.get_text(strip=True) if author_elem else None
 
-        # URL autora
+        # Author URL
         author_link = quote_div.select_one("a[href^='/author/']")
         author_url = author_link.get("href") if author_link else None
 
-        # Tagi
+        # Tags
         tag_elems = quote_div.select("div.tags a.tag")
         tags = [tag.get_text(strip=True) for tag in tag_elems]
 
@@ -142,32 +142,32 @@ class QuotesScraper:
         }
 
     def _has_next_page(self, html: str) -> bool:
-        """Sprawdza czy jest następna strona.
+        """Checks if there is a next page.
 
         Args:
-            html: HTML strony.
+            html: Page HTML.
 
         Returns:
-            True jeśli jest następna strona.
+            True if there is a next page.
         """
         soup = BeautifulSoup(html, "lxml")
         next_btn = soup.select_one("li.next a")
         return next_btn is not None
 
     def _to_csv(self, quotes: list[dict]) -> str:
-        """Konwertuje listę cytatów do formatu CSV.
+        """Converts quote list to CSV format.
 
         Args:
-            quotes: Lista słowników z danymi cytatów.
+            quotes: List of dictionaries with quote data.
 
         Returns:
-            String CSV.
+            CSV string.
         """
         if not quotes:
             return ""
 
         output = io.StringIO()
-        # Zamień listę tagów na string
+        # Convert tags list to string
         flat_quotes = []
         for q in quotes:
             flat_q = q.copy()
@@ -181,17 +181,17 @@ class QuotesScraper:
         return output.getvalue()
 
     def _to_excel(self, quotes: list[dict]) -> bytes:
-        """Konwertuje listę cytatów do formatu Excel (bytes).
+        """Converts quote list to Excel format (bytes).
 
         Args:
-            quotes: Lista słowników z danymi cytatów.
+            quotes: List of dictionaries with quote data.
 
         Returns:
-            Plik XLSX jako bytes.
+            XLSX file as bytes.
         """
         import pandas as pd
 
-        # Zamień listę tagów na string
+        # Convert tags list to string
         flat_quotes = []
         for q in quotes:
             flat_q = q.copy()
@@ -204,13 +204,13 @@ class QuotesScraper:
         return output.getvalue()
 
     def get(self, html: str | None = None) -> str | bytes:
-        """Pobiera cytaty i zwraca w formacie ustawionym w konstruktorze.
+        """Fetches quotes and returns in format set in constructor.
 
         Args:
-            html: Opcjonalny HTML do sparsowania (zamiast pobierania).
+            html: Optional HTML to parse (instead of fetching).
 
         Returns:
-            JSON string, CSV string lub Excel bytes.
+            JSON string, CSV string or Excel bytes.
 
         Example:
             >>> scraper = QuotesScraper(tag="love", pages=2)
