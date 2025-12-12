@@ -35,6 +35,27 @@ cp .env.example .env
 docker compose up --build
 ```
 
+## Użycie CLI
+
+```bash
+# Uruchom CLI
+python main.py
+
+# Przykłady
+python main.py                      # Wszystkie książki, wszystkie strony, JSON
+python main.py mystery_3            # Kategoria Mystery
+python main.py travel_2 --pages 3   # Travel, tylko 3 strony
+python main.py --format csv         # Wyjście jako CSV
+python main.py --format excel       # Zapisz do data/processed/books.xlsx
+```
+
+**Formaty wyjścia:**
+- `json` (domyślny) - wypisuje JSON na stdout
+- `csv` - wypisuje CSV na stdout
+- `excel` - zapisuje do pliku `data/processed/books.xlsx`
+
+**Dostępne kategorie:** `books_1` (wszystkie), `travel_2`, `mystery_3`, `science-fiction_16`, `fantasy_19`, `horror_31`, ...
+
 ---
 
 ## Zasady pracy w projekcie
@@ -186,6 +207,15 @@ def clamp_values(data: list[int], max_value: int = 100) -> list[int]:
 
 ### 4. Testy
 
+#### Wymagane pokrycie kodu: minimum 80%
+
+```bash
+# Sprawdź coverage
+pytest --cov=src --cov-report=term-missing --cov-fail-under=80
+```
+
+**Kod bez 80% pokrycia testami NIE może być ucommitowany.**
+
 #### Struktura testów
 
 ```python
@@ -271,8 +301,9 @@ git commit -m "refactor: wydziel metodę _parse_price"
 |---------|------|
 | `pytest` | Uruchom testy |
 | `pytest -v` | Testy z detalami |
-| `pytest --cov=src` | Testy z coverage |
-| `python main.py` | Uruchom scraper |
+| `pytest --cov=src --cov-fail-under=80` | Testy z coverage (min 80%) |
+| `python main.py` | Uruchom CLI |
+| `python main.py mystery_3 --pages 2` | Scrapuj kategorię |
 | `docker compose up` | Uruchom w Docker |
 
 ## Zmienne środowiskowe

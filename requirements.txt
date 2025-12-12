@@ -12,6 +12,7 @@ httpx>=0.25.0
 # Data processing
 pandas>=2.2.0
 pydantic>=2.5.0
+openpyxl>=3.1.0
 
 # Database
 sqlalchemy>=2.0.0
